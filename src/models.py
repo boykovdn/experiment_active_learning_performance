@@ -45,7 +45,7 @@ class CPFeatures:
         assert self.hooked_outputs, "Hooked outputs are empty."
         for key, tensor_ in self.hooked_outputs.items():
 
-            outp_ = interpolate(tensor_, size=(square_size, square_size))
+            outp_ = interpolate(tensor_[None,], size=(square_size, square_size))[0]
 
             if outp_tensor is None:
                 outp_tensor = outp_
