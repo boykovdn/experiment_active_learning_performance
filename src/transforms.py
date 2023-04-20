@@ -9,7 +9,7 @@ def add_ellipse_random_placement(
         a_range,
         b_range,
         angle_range,
-        alpha=0.8):
+        scale=1.):
     r"""
     Samples a randomly oriented and scaled ellipse artifact to the 
     image. The inputs are ranges for each parameter to be sampled
@@ -29,7 +29,7 @@ def add_ellipse_random_placement(
 
         :angle_range: tuple float (2,) in range(0,pi) ellipse rotation
 
-        :alpha: float in range(0,1), blend parameter
+        :scale: float, the intensity of the artefact.
 
     Outputs:
         
@@ -42,14 +42,15 @@ def add_ellipse_random_placement(
     assert C == 1, "Expected grayscale (1,H,W), but got {}".format(image_tensor.shape)
 
     # Stack the input ranges for a,b and angle. Then sample uniformly from each range.
-    ranges_ = torch.stack(list(map(lambda x : torch.Tensor(x), [h_range, w_range, a_range, b_range, angle_range]))) # (5,2)
-    h, w, a, b, angle = (torch.rand(5) * (ranges_[:,1] - ranges_[:,0]) + ranges_[:,0]).floor()
+    ranges_ = torch.stack(list(map(lambda x : torch.Tensor(x), [h_range, w_range, a_range, b_range]))) # (5,2)
+    h, w, a, b = (torch.rand(4) * (ranges_[:,1] - ranges_[:,0]) + ranges_[:,0]).floor()
+    angle = torch.rand(1) * (angle_range[1] - angle_range[0]) + angle_range[0]
 
     # Sample the ellipse given the center and geometry parameters.
     artefact_ = torch.from_numpy(get_ellipsoid_pattern((H,W), torch.Tensor([h,w]), a=a, b=b, angle=angle)).float()
-
+    
     mask_ = artefact_.bool()
-    # Calculate weighted sum of pixels where artefact is present.
-    image_tensor[0, mask_] = image_tensor[0, mask_] * (1-alpha) + artefact_[mask_] * alpha
+    # Add ellipse artifact.
+    image_tensor[0, mask_] = image_tensor[0, mask_] + artefact_[mask_] * scale
 
     return image_tensor, mask_
