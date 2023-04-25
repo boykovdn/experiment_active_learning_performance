@@ -2,9 +2,10 @@ FROM pytorch/pytorch
 
 RUN apt-get update
 RUN apt-get upgrade -y
-RUN apt-get install git vim -y
+RUN apt-get install git vim graphviz -y
 
-RUN pip install imageio networkx matplotlib jupyter cellpose scikit-learn
+RUN pip install imageio networkx matplotlib jupyter cellpose scikit-learn graphviz
+
 #COPY ./src /src
 #RUN ln -s /src /opt/conda/lib/python3.10/site-packages/experiment_alp
 

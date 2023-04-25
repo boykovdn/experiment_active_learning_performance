@@ -3,6 +3,7 @@ from dataset import CellCrops
 from pathlib import Path
 from transforms import add_ellipse_random_placement
 from sklearn.gaussian_process import GaussianProcessClassifier
+from sklearn.gaussian_process.kernels import RBF, ConstantKernel
 import torch
 
 DSET_PATH = Path("/data/dataset/fl_dataset/healthy_train/raw")
@@ -66,10 +67,12 @@ def test_classifier_forward():
     print(y_train.shape)
     print(y_test.shape)
 
-    gp_clf = GaussianProcessClassifier()
+    gp_clf = GaussianProcessClassifier(
+                kernel=( ConstantKernel(0.5) * RBF(length_scale=2.) )
+            )
     gp_clf.fit(X_train, y_train)
+    print(gp_clf.kernel_)
 
-    import pdb; pdb.set_trace()
-    print(gp_clf.score(X_train, y_train))
+    print(gp_clf.score(X_test, y_test))
 
 test_classifier_forward()
