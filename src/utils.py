@@ -1,4 +1,6 @@
 from scipy.ndimage.morphology import distance_transform_edt
+from scipy.stats import entropy
+
 import numpy as np
 import torch
 
@@ -52,3 +54,58 @@ def get_ellipsoid_noise(out_shape, center, a=10., b=5., angle=0.3,
     pattern[mask] = random_sample
 
     return pattern
+
+def select_query_subset(X, y, P, size):
+    r"""
+    Simulates selecting the query subset of X and receiving the
+    oracle predictions y for it. The subset is selected based on
+    the highest entropy of the predicted distribution.
+
+    Inputs:
+        :X: (N, C) floats, feature vectors.
+
+        :y: (N,) int, class belonging expect in {0,1} (Bernoulli).
+
+        :P: (N, n_classes) Categorical distribution for each sample.
+
+    Returns:
+
+        X, y sizes (size, C), (size,)
+    """
+
+    _entropies = np.apply_along_axis(entropy, 1, P) # (N,C) -> (N,)
+    _idxs = np.argsort(_entropies)[-size:]
+
+    return X[_idxs], y[_idxs]
+
+
+def select_random_subset(X, y, P, size):
+    r"""
+    P not used, but added for compatibility with experiment callable.
+    """
+
+    assert size < len(X), "Subset ({}) cannot be larger than the dataset {}."\
+            .format(size, len(X))
+
+    _subset_idx = np.floor(
+                np.random.uniform(0, len(X), size)
+            ).astype(int)
+
+    return X[_subset_idx], y[_subset_idx]
+
+def select_init_random_subset(X, y, size):
+    r"""
+    Random subset selection, but taking care not to select datapoints
+    only belonging to one class. Select size//2 from each one.
+    """
+    _mask0 = y == 0
+    X_class0 = X[_mask0]
+    X_class1 = X[~_mask0]
+
+    X_init_0, y_init_0 = select_random_subset(X_class0, np.zeros(len(X_class0)), None, size)
+    X_init_1, y_init_1 = select_random_subset(X_class1, np.ones(len(X_class1)), None, size)
+
+    out_ = (np.concatenate([X_init_0, X_init_1]), np.concatenate([y_init_0, y_init_1]))
+
+    return out_
+

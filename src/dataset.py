@@ -4,6 +4,10 @@ import imageio
 from tqdm.auto import tqdm
 from torchvision.transforms import Resize
 
+from sklearn.datasets import make_classification
+
+from .utils import select_init_random_subset
+
 class CellCrops(torch.utils.data.Dataset):
     r"""
     Loads all cells into memory, they should be very small - cropped around
@@ -103,3 +107,65 @@ class CellCrops(torch.utils.data.Dataset):
             return self.cell_images[idx]
         else:
             return self.transforms(self.cell_images[idx])
+
+def make_sklearn_generated_dataset(
+        n_total=15000, n_train=10000,
+        n_informative=2, n_redundant=0, 
+        n_repeated=0, n_clusters_per_class=2,
+        oracle_batch_size=10,
+        random_state=0 
+        ):
+    r"""
+
+    Inputs:
+
+        :n_total: int, the total number of datapoints generated.
+
+        :n_train: int, n_train < n_total. The number of datapoints used for
+            training. The other n_total - n_train are used for score evaluation.
+
+        :n_informative: int, the dimensionality of the Normal distribution from
+            which the generated data is sampled. Each of these dimensions carries
+            useful information.
+
+        :n_redundant: int, linear combinations of the informative features, check
+            sklearn make_classification.
+
+        :n_repeated: int, number of repeated dimensions.
+
+        :n_clusters_per_class: int, number of clusters each class has.
+
+        :oracle_batch_size: int, the size of the batch queried from the oracle.
+            This is needed because the classifiers are trained on the same
+            initial subset and the function which selects these subsets ensures
+            that a balanced selection of both classes is present, and needs to
+            know how many points to sample.
+
+        :random_state: int, sklearn seed for reproducibility.
+
+    Returns:
+
+        train, test, init datasets. Each one is a tuple of (X, y), where X is 
+            of shape (N_samples, N_featues) and y is the binary classification
+            label in {0, 1}.
+
+    """
+
+    X, y = make_classification(
+                           random_state=random_state,
+                           n_samples=n_total,
+                           n_informative=n_informative,
+                           n_redundant=n_redundant,
+                           n_repeated=n_repeated,
+                           n_classes = 2, # Hardcode binary classification problem
+                           n_clusters_per_class=n_clusters_per_class,
+                           n_features=(n_informative + n_redundant + n_repeated))
+
+    X_train, y_train = X[:n_train], y[:n_train]
+    X_eval, y_eval = X[n_train:], y[n_train:]
+    # Ensure that both classifiers start at the same place by fitting them
+    # with the same initial random sample before their training schedules
+    # diverge.
+    X_init, y_init = select_init_random_subset(X_train, y_train, oracle_batch_size)
+
+    return (X_train, y_train), (X_eval, y_eval), (X_init, y_init)

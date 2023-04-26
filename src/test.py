@@ -1,7 +1,8 @@
-from models import CPFeatures
-from dataset import CellCrops
+from .models import CPFeatures
+from .dataset import CellCrops
+from .transforms import add_ellipse_random_placement
+
 from pathlib import Path
-from transforms import add_ellipse_random_placement
 from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel
 import torch

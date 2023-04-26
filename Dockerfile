@@ -6,6 +6,12 @@ RUN apt-get install git vim graphviz -y
 
 RUN pip install imageio networkx matplotlib jupyter cellpose scikit-learn graphviz
 
+# Ensure source code dir exists before it is mounted.
+RUN mkdir /src
+# Link src so that it appears as a python package. This is done so that
+# the jupyter notebooks can find the code.
+RUN ln -s /src /opt/conda/lib/python3.10/site-packages/this_experiment
+
 #COPY ./src /src
 #RUN ln -s /src /opt/conda/lib/python3.10/site-packages/experiment_alp
 

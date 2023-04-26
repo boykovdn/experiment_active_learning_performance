@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from utils import get_ellipsoid_pattern
+from .utils import get_ellipsoid_pattern
 
 def add_ellipse_random_placement(
         image_tensor,
