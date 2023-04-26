@@ -50,7 +50,8 @@ def add_ellipse_random_placement(
     artefact_ = torch.from_numpy(get_ellipsoid_pattern((H,W), torch.Tensor([h,w]), a=a, b=b, angle=angle)).float()
     
     mask_ = artefact_.bool()
-    # Add ellipse artifact.
-    image_tensor[0, mask_] = image_tensor[0, mask_] + artefact_[mask_] * scale
+    # Copy input and add ellipse artifact.
+    output_ = torch.clone(image_tensor)
+    output_[0, mask_] = image_tensor[0, mask_] + artefact_[mask_] * scale
 
-    return image_tensor, mask_
+    return output_, mask_
