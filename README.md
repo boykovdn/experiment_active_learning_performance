@@ -16,3 +16,5 @@ The gp\_al (stands for Gaussian Process Active Learning) algorithm is at the cen
 ## Running
 
 Change run\_container.sh to use your directories. Use docker and the run\_container.sh script. Uncomment the jupyter bit if you want to run a notebook on localhost:8008.
+
+For using the fluorescent cells dataset, download and unpack https://zenodo.org/record/6645803 into /data and use the run\_container.sh script to mount this directory.
